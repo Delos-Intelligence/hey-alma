@@ -1,0 +1,35 @@
+import os
+import numpy as np
+import librosa
+
+# Input and output folders
+input_folder = "dataset/positive_samples"
+output_folder = "dataset-raw/positive_samples"
+
+os.makedirs(output_folder, exist_ok=True)
+
+# Audio settings
+sample_rate = 16000
+max_duration = 1.0  # seconds
+max_length = int(sample_rate * max_duration)  # 16000 samples
+
+for filename in os.listdir(input_folder):
+    if not filename.endswith(".wav"):
+        continue
+
+    filepath = os.path.join(input_folder, filename)
+
+    # Load and pad/trim audio to 1 second
+    audio, sr = librosa.load(filepath, sr=sample_rate)
+    if len(audio) > max_length:
+        audio = audio[:max_length]
+    else:
+        audio = np.pad(audio, (0, max_length - len(audio)))
+
+    # Normalize audio (optional but helps training)
+    audio = (audio - np.mean(audio)) / np.std(audio)
+
+    # Save raw waveform as .npy
+    np.save(os.path.join(output_folder, filename.replace(".wav", ".npy")), audio)
+
+print("✅ Raw audio preprocessing complete!")
